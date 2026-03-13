@@ -1,16 +1,16 @@
 {
   "source": "loc",
-  "collected_at": "2026-03-13T03:47:07Z",
+  "collected_at": "2026-03-13T04:44:06Z",
   "date": "2026-03-12",
   "local": {
     "total_code_lines": 4608051,
     "repos": 73,
     "files": 1723,
-    "scripts": 298,
-    "script_lines": 575777
+    "scripts": 300,
+    "script_lines": 576887
   },
   "projects": {
-    "blackroad-os-kpis": 1226,
+    "blackroad-os-kpis": 2953,
     "images-blackroad": 2562,
     "roadnet": 5064
   },
