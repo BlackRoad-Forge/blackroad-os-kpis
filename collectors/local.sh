@@ -47,19 +47,33 @@ net_connections=$(netstat -an 2>/dev/null | grep ESTABLISHED | wc -l | tr -d ' '
 downloads_count=$(ls -1 ~/Downloads/ 2>/dev/null | wc -l | tr -d ' ')
 documents_count=$(ls -1 ~/Documents/ 2>/dev/null | wc -l | tr -d ' ')
 
-# FTS5 memory index
+# Knowledge entries (markdown files + headings)
 fts_entries=0
 if [ -f ~/.blackroad/markdown.db ]; then
   fts_entries=$(python3 -c "
 import sqlite3
 c = sqlite3.connect('$HOME/.blackroad/markdown.db')
-try:
-    r = c.execute('SELECT count(*) FROM markdown_fts').fetchone()
-    print(r[0])
-except:
-    print(0)
+total = 0
+for t in ['markdown_files', 'markdown_headings']:
+    try:
+        total += c.execute(f'SELECT count(*) FROM {t}').fetchone()[0]
+    except: pass
+print(total)
 " 2>/dev/null || echo 0)
 fi
+
+# Total rows across all blackroad databases
+total_db_rows=$(python3 -c "
+import sqlite3, glob, os
+total = 0
+for db in glob.glob(os.path.expanduser('~/.blackroad/*.db')):
+    try:
+        c = sqlite3.connect(db)
+        for t in [r[0] for r in c.execute(\"SELECT name FROM sqlite_master WHERE type='table'\").fetchall()]:
+            total += c.execute(f'SELECT count(*) FROM [{t}]').fetchone()[0]
+    except: pass
+print(total)
+" 2>/dev/null || echo 0)
 
 # Systems.db count
 systems_count=0
@@ -113,6 +127,9 @@ cat > "$OUT" << ENDJSON
   "files": {
     "downloads": $downloads_count,
     "documents": $documents_count
+  },
+  "data": {
+    "total_db_rows": $total_db_rows
   }
 }
 ENDJSON

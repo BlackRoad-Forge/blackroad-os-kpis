@@ -8,6 +8,7 @@ KPI_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DATA_DIR="$KPI_ROOT/data"
 TODAY=$(date +%Y-%m-%d)
 TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+export KPI_ROOT DATA_DIR TODAY TIMESTAMP
 
 # Ensure data dirs
 mkdir -p "$DATA_DIR/daily" "$DATA_DIR/snapshots" "$DATA_DIR/raw"
@@ -26,7 +27,8 @@ err() { echo -e "${RED}  ✗${RESET} $*" >&2; }
 
 # Config
 GITHUB_USER="blackboxprogramming"
-GITHUB_ORGS="Blackbox-Enterprises blackroad-os-inc"
+GITHUB_ORGS="Blackbox-Enterprises BlackRoad-AI BlackRoad-OS BlackRoad-Labs BlackRoad-Cloud BlackRoad-Ventures BlackRoad-Foundation BlackRoad-Media BlackRoad-Hardware BlackRoad-Education BlackRoad-Gov BlackRoad-Security BlackRoad-Interactive BlackRoad-Archive BlackRoad-Studio BlackRoad-OS-Inc"
+export GITHUB_USER GITHUB_ORGS
 GITEA_HOST="192.168.4.100"
 GITEA_PORT="3100"
 GITEA_ORGS="blackroad-os lucidia platform blackroad-ai blackroad-cloud blackroad-infra blackroad-labs"

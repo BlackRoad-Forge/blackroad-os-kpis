@@ -64,33 +64,40 @@ print(json.dumps({
 }))
 " 2>/dev/null || echo '{}')
 
-# Org stats
-org_stats='{'
-first=true
-for org in $GITHUB_ORGS; do
-  org_repos=$(gh api "orgs/$org/repos?per_page=100" --paginate --jq 'length' 2>/dev/null || echo 0)
-  org_members=$(gh api "orgs/$org/members?per_page=100" --jq 'length' 2>/dev/null || echo 0)
-  if [ "$first" = true ]; then
-    org_stats="$org_stats\"$org\": {\"repos\": $org_repos, \"members\": $org_members}"
-    first=false
-  else
-    org_stats="$org_stats, \"$org\": {\"repos\": $org_repos, \"members\": $org_members}"
-  fi
-done
-org_stats="$org_stats}"
+# Org stats — use python to avoid jq pagination issues
+python3 << PYEOF
+import json, subprocess, os
 
-ok "Orgs: $org_stats"
+def gh_count(endpoint):
+    result = subprocess.run(['gh', 'api', endpoint, '--paginate'],
+        capture_output=True, text=True, timeout=60)
+    items = []
+    for line in result.stdout.strip().split('\n'):
+        if line.strip():
+            try:
+                data = json.loads(line)
+                if isinstance(data, list):
+                    items.extend(data)
+            except:
+                pass
+    return len(items)
 
-python3 -c "
-import json
+orgs_list = os.environ.get('GITHUB_ORGS', '').split()
+org_stats = {}
+for org in orgs_list:
+    try:
+        repos = gh_count(f'orgs/{org}/repos?per_page=100')
+        members = gh_count(f'orgs/{org}/members?per_page=100')
+        org_stats[org] = {'repos': repos, 'members': members}
+    except:
+        org_stats[org] = {'repos': 0, 'members': 0}
 
 repo_stats = json.loads('''$repo_stats''')
-org_stats = json.loads('''$org_stats''')
 
 output = {
     'source': 'github-deep',
-    'collected_at': '$TIMESTAMP',
-    'date': '$TODAY',
+    'collected_at': os.environ.get('TIMESTAMP', ''),
+    'date': os.environ.get('TODAY', ''),
     'profile': {
         'followers': $followers,
         'following': $following,
@@ -101,8 +108,11 @@ output = {
     'orgs': org_stats
 }
 
-with open('$OUT', 'w') as f:
+out_file = '$OUT'
+with open(out_file, 'w') as f:
     json.dump(output, f, indent=2)
-" 2>/dev/null
+
+print(f"  \033[38;5;82m✓\033[0m Orgs: {len(org_stats)} organizations collected")
+PYEOF
 
 ok "Deep GitHub metrics collected"

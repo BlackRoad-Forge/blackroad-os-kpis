@@ -11,7 +11,7 @@ log "═════════════════════════
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Run all collectors
-for collector in github github-deep gitea fleet services autonomy loc local cloudflare; do
+for collector in github github-deep github-all-orgs gitea fleet services autonomy loc local cloudflare traffic; do
   log "Running $collector collector..."
   bash "$SCRIPT_DIR/$collector.sh" 2>&1 || err "Collector $collector failed"
   echo
@@ -38,6 +38,7 @@ for f in glob.glob(f'{data_dir}/snapshots/{today}-*.json'):
 # Build daily summary
 gh = snapshots.get('github', {})
 ghd = snapshots.get('github-deep', {})
+gha = snapshots.get('github-all-orgs', {})
 gt = snapshots.get('gitea', {})
 fl = snapshots.get('fleet', {})
 sv = snapshots.get('services', {})
@@ -45,6 +46,7 @@ au = snapshots.get('autonomy', {})
 lc = snapshots.get('loc', {})
 lo = snapshots.get('local', {})
 cf = snapshots.get('cloudflare', {})
+tr = snapshots.get('traffic', {})
 
 daily = {
     'date': today,
@@ -59,15 +61,20 @@ daily = {
         'github_events_today': gh.get('activity', {}).get('events_today', 0),
 
         # Repos
-        'repos_github': gh.get('repos', {}).get('total', 0),
+        'repos_github': gha.get('totals', {}).get('repos', gh.get('repos', {}).get('total', 0)),
+        'repos_github_active': gha.get('totals', {}).get('active', 0),
+        'repos_github_archived': gha.get('totals', {}).get('archived', 0),
+        'github_org_count': gha.get('totals', {}).get('org_count', 0),
+        'github_language_count': gha.get('totals', {}).get('language_count', 0),
+        'github_all_size_mb': gha.get('totals', {}).get('size_mb', 0),
         'repos_gitea': gt.get('repos', {}).get('total', 0),
-        'repos_total': gh.get('repos', {}).get('total', 0) + gt.get('repos', {}).get('total', 0),
-        'repos_active': ghd.get('repos', {}).get('active', 0),
-        'repos_archived': ghd.get('repos', {}).get('archived', 0),
+        'repos_total': gha.get('totals', {}).get('repos', gh.get('repos', {}).get('total', 0)) + gt.get('repos', {}).get('total', 0),
+        'repos_active': gha.get('totals', {}).get('active', ghd.get('repos', {}).get('active', 0)),
+        'repos_archived': gha.get('totals', {}).get('archived', ghd.get('repos', {}).get('archived', 0)),
 
         # GitHub profile
-        'github_stars': ghd.get('repos', {}).get('total_stars', 0),
-        'github_forks': ghd.get('repos', {}).get('total_forks', 0),
+        'github_stars': gha.get('totals', {}).get('stars', ghd.get('repos', {}).get('total_stars', 0)),
+        'github_forks': gha.get('totals', {}).get('forks', ghd.get('repos', {}).get('total_forks', 0)),
         'github_followers': ghd.get('profile', {}).get('followers', 0),
         'github_following': ghd.get('profile', {}).get('following', 0),
         'github_open_issues': ghd.get('repos', {}).get('total_open_issues', 0),
@@ -125,6 +132,7 @@ daily = {
         'blackroad_dir_mb': lo.get('databases', {}).get('blackroad_dir_mb', 0),
         'fts5_entries': lo.get('databases', {}).get('fts5_entries', 0),
         'systems_registered': lo.get('databases', {}).get('systems_registered', 0),
+        'total_db_rows': lo.get('data', {}).get('total_db_rows', 0),
         'brew_packages': lo.get('packages', {}).get('homebrew', 0),
         'pip_packages': lo.get('packages', {}).get('pip3', 0),
         'npm_global_packages': lo.get('packages', {}).get('npm_global', 0),
@@ -140,6 +148,25 @@ daily = {
         'cf_r2_buckets': cf.get('r2', {}).get('count', 0),
         'cf_pages': cf.get('pages', {}).get('count', 0),
         'cf_d1_size_kb': cf.get('d1', {}).get('total_size_kb', 0),
+
+        # Traffic & Velocity (from traffic.sh)
+        'github_views_14d': tr.get('github', {}).get('views_14d', 0),
+        'github_unique_visitors_14d': tr.get('github', {}).get('unique_visitors_14d', 0),
+        'github_clones_14d': tr.get('github', {}).get('clones_14d', 0),
+        'github_unique_cloners_14d': tr.get('github', {}).get('unique_cloners_14d', 0),
+        'github_contributions_ytd': tr.get('github', {}).get('contributions_ytd', 0),
+        'github_commit_streak_days': tr.get('github', {}).get('commit_streak_days', 0),
+        'github_avg_commits_per_day': tr.get('github', {}).get('avg_commits_per_day', 0),
+        'github_issues_closed_total': tr.get('github', {}).get('issues_closed_total', 0),
+        'github_repos_updated_7d': tr.get('github', {}).get('repos_updated_7d', 0),
+        'cf_zones_count': tr.get('cloudflare', {}).get('zones_count', 0),
+        'cf_workers_total': tr.get('cloudflare', {}).get('workers_total', 0),
+        'cf_tunnels_total': tr.get('cloudflare', {}).get('tunnels_total', 0),
+        'cf_tunnels_healthy': tr.get('cloudflare', {}).get('tunnels_healthy', 0),
+
+        # Derived
+        'unique_loc': int(lc.get('total_estimated_loc', 0) * 0.69),
+        'non_fork_repos': max(gha.get('totals', {}).get('repos', 0) + gt.get('repos', {}).get('total', 0) - tr.get('github', {}).get('total_forks', 46), 0),
     },
     'sources': snapshots
 }
@@ -157,3 +184,12 @@ log "═════════════════════════
 
 # Run report
 bash "$(dirname "$0")/../reports/daily-report.sh"
+
+# Push KPIs to Cloudflare KV for live resume dashboards
+bash "$(dirname "$0")/../reports/push-kv.sh" 2>&1 || err "KV push failed"
+
+# Auto-update resume repo
+bash "$(dirname "$0")/../reports/update-resumes.sh" 2>&1 || err "Resume update failed"
+
+# Check for alertable conditions and post to Slack
+bash "$(dirname "$0")/../reports/slack-alert.sh" 2>&1 || err "Alert check failed"

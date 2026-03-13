@@ -102,12 +102,12 @@ print(f"""
    Total LOC          {G}{s['total_loc']:>10,}{R}{d('total_loc')}
 
 {A}═══ REPOSITORIES ══════════════════════════════════════════════{R}
-   GitHub repos          {s['repos_github']:>6}{d('repos_github')}
+   GitHub repos          {s['repos_github']:>6}  {DIM}({s.get('github_org_count', 0)} orgs){R}{d('repos_github')}
+   GitHub active          {s.get('repos_github_active', 0):>5}  {DIM}archived {s.get('repos_github_archived', 0)}{R}
+   Languages              {s.get('github_language_count', 0):>5}{d('github_language_count')}
+   GitHub size         {round(s.get('github_all_size_mb', s.get('github_size_mb', 0)) / 1024, 1):>7} GB{d('github_all_size_mb')}
    Gitea repos           {s['repos_gitea']:>6}{d('repos_gitea')}
    Total repos           {W}{s['repos_total']:>6}{R}{d('repos_total')}
-   Active                {s.get('repos_active', 0):>6}
-   Archived              {s.get('repos_archived', 0):>6}
-   Total size         {s.get('github_size_mb', 0):>7.0f} MB{d('github_size_mb')}
    Stars                 {s.get('github_stars', 0):>6}    Forks  {s.get('github_forks', 0)}
    Followers             {s.get('github_followers', 0):>6}    Following  {s.get('github_following', 0)}
 

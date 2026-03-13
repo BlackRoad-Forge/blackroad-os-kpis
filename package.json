@@ -15,7 +15,10 @@
     "collect:cloudflare": "bash collectors/cloudflare.sh",
     "report": "bash reports/daily-report.sh",
     "report:slack": "bash reports/slack-notify.sh",
-    "report:md": "bash reports/markdown-report.sh"
+    "report:md": "bash reports/markdown-report.sh",
+    "collect:all-orgs": "bash collectors/github-all-orgs.sh",
+    "push:kv": "bash reports/push-kv.sh",
+    "deploy:resumes": "cd ~/alexa-amundson-resume && wrangler deploy"
   },
   "private": true
 }

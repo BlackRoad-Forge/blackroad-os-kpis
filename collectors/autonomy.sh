@@ -21,24 +21,28 @@ for entry in $FLEET_NODES; do
   result=$(ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no "$user@$ip" '
     today=$(date +%Y-%m-%d)
 
+    # Safe grep -c wrapper: grep -c returns exit 1 on zero matches,
+    # which breaks || echo 0 (double output). Use subshell + true instead.
+    safe_count() { grep -c "$@" 2>/dev/null || true; }
+
     # Count self-healing events from autonomy logs
     heal_events=0
     if [ -f ~/.blackroad-autonomy/cron.log ]; then
-      heal_events=$(grep -c "$today" ~/.blackroad-autonomy/cron.log 2>/dev/null || echo 0)
+      heal_events=$(safe_count "$today" ~/.blackroad-autonomy/cron.log)
     fi
 
     # Count service restarts today
-    restarts=$(journalctl --since today -u "*.service" --no-pager 2>/dev/null | grep -c "Started\|Restarted\|Reloaded" || echo 0)
+    restarts=$(journalctl --since today -u "*.service" --no-pager 2>/dev/null | safe_count "Started\|Restarted\|Reloaded")
 
     # Count failed systemd units
     failed=$(systemctl --failed --no-legend 2>/dev/null | wc -l | tr -d " ")
 
     # Cron job count
-    cron_jobs=$(crontab -l 2>/dev/null | grep -cv "^#\|^$" || echo 0)
+    cron_jobs=$(crontab -l 2>/dev/null | safe_count -v "^#\|^$")
     user_crons=0
     for u in $(ls /home/ 2>/dev/null); do
-      c=$(sudo crontab -u "$u" -l 2>/dev/null | grep -cv "^#\|^$" || echo 0)
-      user_crons=$((user_crons + c))
+      c=$(sudo crontab -u "$u" -l 2>/dev/null | safe_count -v "^#\|^$")
+      [ -n "$c" ] && [ "$c" -gt 0 ] 2>/dev/null && user_crons=$((user_crons + c))
     done
 
     # Watchdog/timer units
@@ -47,11 +51,11 @@ for entry in $FLEET_NODES; do
     # Power monitor entries today
     power_entries=0
     if [ -f /var/log/blackroad-power.log ]; then
-      power_entries=$(grep -c "$today" /var/log/blackroad-power.log 2>/dev/null || echo 0)
+      power_entries=$(safe_count "$today" /var/log/blackroad-power.log)
     fi
 
     # Docker auto-restarts
-    docker_restarts=$(docker ps -a --format "{{.Status}}" 2>/dev/null | grep -c "Restarting" || echo 0)
+    docker_restarts=$(docker ps -a --format "{{.Status}}" 2>/dev/null | safe_count "Restarting")
 
     # Uptime in days
     uptime_days=$(awk "{print int(\$1/86400)}" /proc/uptime)
@@ -100,7 +104,7 @@ score = min(100, max(0,
     + min(20, total_timers * 2)
     + min(15, total_crons)
     + min(10, total_heals * 5)
-    - total_failed * 10
+    - total_failed * 3
 ))
 
 output = {
