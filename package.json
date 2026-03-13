@@ -1,0 +1,16 @@
+{
+  "name": "blackroad-os-kpis",
+  "version": "1.0.0",
+  "description": "BlackRoad OS KPI tracking — commits, PRs, autonomy, LOC, fleet health",
+  "scripts": {
+    "collect": "bash collectors/collect-all.sh",
+    "collect:github": "bash collectors/github.sh",
+    "collect:gitea": "bash collectors/gitea.sh",
+    "collect:fleet": "bash collectors/fleet.sh",
+    "collect:autonomy": "bash collectors/autonomy.sh",
+    "report": "bash reports/daily-report.sh",
+    "report:slack": "bash reports/slack-notify.sh",
+    "dashboard": "node dashboards/serve.js"
+  },
+  "private": true
+}
