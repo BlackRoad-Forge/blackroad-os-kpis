@@ -54,7 +54,7 @@ daily = {
         'repos_gitea': gt.get('repos', {}).get('total', 0),
         'repos_total': gh.get('repos', {}).get('total', 0) + gt.get('repos', {}).get('total', 0),
         'fleet_online': fl.get('fleet', {}).get('online', 0),
-        'fleet_total': fl.get('fleet', {}).get('total', 0),
+        'fleet_total': fl.get('fleet', {}).get('total_nodes', 4),
         'autonomy_score': au.get('autonomy_score', 0),
         'total_loc': lc.get('total_estimated_loc', 0),
         'docker_containers': fl.get('totals', {}).get('docker_containers', 0),

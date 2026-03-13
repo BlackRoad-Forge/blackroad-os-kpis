@@ -14,13 +14,14 @@ fi
 YESTERDAY=$(date -v-1d +%Y-%m-%d 2>/dev/null || date -d '1 day ago' +%Y-%m-%d)
 YESTERDAY_FILE="$DATA_DIR/daily/${YESTERDAY}.json"
 
+export DAILY YESTERDAY_FILE
 python3 << 'PYEOF'
 import json, os, sys
 
-today_file = os.environ.get('DAILY', '') or sys.argv[1] if len(sys.argv) > 1 else ''
+today_file = os.environ.get('DAILY', '')
 yesterday_file = os.environ.get('YESTERDAY_FILE', '')
 
-with open(today_file or DAILY) as f:
+with open(today_file) as f:
     data = json.load(f)
 
 yesterday = {}

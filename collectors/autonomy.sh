@@ -3,6 +3,7 @@
 # Sources: fleet cron logs, systemd journals, autonomy logs
 
 source "$(dirname "$0")/../lib/common.sh"
+set +e  # Don't exit on SSH failures
 
 log "Collecting autonomy KPIs..."
 

@@ -3,10 +3,12 @@
 # Uptime, CPU, memory, disk, temps, services, Docker
 
 source "$(dirname "$0")/../lib/common.sh"
+set +e  # Don't exit on SSH failures
 
 log "Collecting fleet KPIs..."
 
 OUT=$(snapshot_file fleet)
+PROBE_SCRIPT="$(dirname "$0")/fleet-probe.py"
 
 nodes_json="["
 first=true
@@ -18,30 +20,13 @@ for entry in $FLEET_NODES; do
 
   log "Probing $node ($user@$ip)..."
 
-  # Collect via SSH with timeout
-  result=$(ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no "$user@$ip" '
-    echo "{"
-    echo "\"hostname\": \"$(hostname)\","
-    echo "\"uptime_seconds\": $(cat /proc/uptime | cut -d" " -f1 | cut -d. -f1),"
-    echo "\"load_1m\": $(cat /proc/loadavg | cut -d" " -f1),"
-    echo "\"load_5m\": $(cat /proc/loadavg | cut -d" " -f2),"
-    echo "\"cpu_temp\": $(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || echo 0),"
-    echo "\"mem_total_mb\": $(free -m | awk "/Mem:/ {print \$2}"),"
-    echo "\"mem_used_mb\": $(free -m | awk "/Mem:/ {print \$3}"),"
-    echo "\"disk_total_gb\": $(df / --output=size -BG | tail -1 | tr -d " G"),"
-    echo "\"disk_used_gb\": $(df / --output=used -BG | tail -1 | tr -d " G"),"
-    echo "\"disk_pct\": $(df / --output=pcent | tail -1 | tr -d " %"),"
-    echo "\"docker_containers\": $(docker ps -q 2>/dev/null | wc -l | tr -d " "),"
-    echo "\"docker_images\": $(docker images -q 2>/dev/null | wc -l | tr -d " "),"
-    echo "\"systemd_failed\": $(systemctl --failed --no-legend 2>/dev/null | wc -l | tr -d " "),"
-    echo "\"ollama_models\": $(curl -sf http://localhost:11434/api/tags 2>/dev/null | python3 -c "import json,sys; print(len(json.load(sys.stdin).get(\"models\",[])))" 2>/dev/null || echo 0),"
-    echo "\"throttle_hex\": \"$(vcgencmd get_throttled 2>/dev/null | cut -d= -f2 || echo unknown)\","
-    echo "\"governor\": \"$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo unknown)\""
-    echo "}"
-  ' 2>/dev/null)
+  # Pipe the probe script via stdin to avoid quoting issues
+  result=$(ssh -o ConnectTimeout=3 -o ServerAliveInterval=3 -o ServerAliveCountMax=2 \
+    -o StrictHostKeyChecking=no -o BatchMode=yes \
+    "$user@$ip" "python3 -" < "$PROBE_SCRIPT" 2>/dev/null || true)
 
   if [ -n "$result" ]; then
-    # Convert CPU temp from millidegrees
+    # Enrich with node info
     result=$(echo "$result" | python3 -c "
 import json, sys
 d = json.load(sys.stdin)

@@ -1,0 +1,210 @@
+{
+  "date": "2026-03-12",
+  "collected_at": "2026-03-13T03:46:49Z",
+  "summary": {
+    "commits_today": 349,
+    "prs_open": 16,
+    "prs_merged_today": 0,
+    "prs_merged_total": 4019,
+    "repos_github": 101,
+    "repos_gitea": 0,
+    "repos_total": 101,
+    "fleet_online": 3,
+    "fleet_total": 0,
+    "autonomy_score": 50,
+    "total_loc": 7212320,
+    "docker_containers": 14,
+    "ollama_models": 27,
+    "avg_temp_c": 43.3,
+    "failed_units": 12,
+    "throttled_nodes": []
+  },
+  "sources": {
+    "loc": {
+      "source": "loc",
+      "collected_at": "2026-03-13T03:47:07Z",
+      "date": "2026-03-12",
+      "local": {
+        "total_code_lines": 4608051,
+        "repos": 73,
+        "files": 1723,
+        "scripts": 298,
+        "script_lines": 575777
+      },
+      "projects": {
+        "blackroad-os-kpis": 1226,
+        "images-blackroad": 2562,
+        "roadnet": 5064
+      },
+      "fleet": {
+        "alice": 1493955,
+        "cecilia": 402080,
+        "octavia": 0,
+        "lucidia": 708234
+      },
+      "total_estimated_loc": 7212320
+    },
+    "github": {
+      "source": "github",
+      "collected_at": "2026-03-13T03:46:49Z",
+      "date": "2026-03-12",
+      "repos": {
+        "total": 101,
+        "total_size_mb": 2650.9,
+        "languages": {
+          "Python": 23,
+          "HTML": 22,
+          "Shell": 9,
+          "TypeScript": 8,
+          "JavaScript": 7,
+          "Dockerfile": 6,
+          "Go": 2,
+          "CSS": 1
+        }
+      },
+      "commits": {
+        "today": 349,
+        "push_events_today": 68
+      },
+      "pull_requests": {
+        "open": 16,
+        "merged_today": 0,
+        "merged_total": 4019
+      },
+      "activity": {
+        "events_today": 100
+      }
+    },
+    "autonomy": {
+      "source": "autonomy",
+      "collected_at": "2026-03-13T03:47:03Z",
+      "date": "2026-03-12",
+      "autonomy_score": 50,
+      "totals": {
+        "heal_events_today": 0,
+        "service_restarts_today": 0,
+        "failed_units": 0,
+        "active_timers": 0,
+        "total_cron_jobs": 0,
+        "max_uptime_days": 0
+      },
+      "nodes": {
+        "octavia": {
+          "status": "unreachable"
+        }
+      }
+    },
+    "fleet": {
+      "source": "fleet",
+      "collected_at": "2026-03-13T03:47:00Z",
+      "date": "2026-03-12",
+      "fleet": {
+        "total_nodes": 4,
+        "online": 3,
+        "offline": 1,
+        "offline_nodes": [
+          "octavia"
+        ]
+      },
+      "totals": {
+        "cpu_avg_temp_c": 43.3,
+        "mem_used_mb": 13130,
+        "mem_total_mb": 19915,
+        "disk_used_gb": 159,
+        "disk_total_gb": 707,
+        "docker_containers": 14,
+        "ollama_models": 27,
+        "systemd_failed": 12,
+        "throttled_nodes": []
+      },
+      "nodes": [
+        {
+          "hostname": "alice",
+          "uptime_seconds": 113325,
+          "load_1m": 0.84,
+          "load_5m": 1.88,
+          "cpu_temp": 34563,
+          "mem_total_mb": 3794,
+          "mem_used_mb": 360,
+          "disk_total_gb": 15,
+          "disk_used_gb": 11,
+          "disk_pct": 76,
+          "docker_containers": 0,
+          "docker_images": 0,
+          "systemd_failed": 3,
+          "ollama_models": 6,
+          "throttle_hex": "0x0",
+          "governor": "ondemand",
+          "cpu_temp_c": 34.6,
+          "mem_pct": 9.5,
+          "status": "online",
+          "node": "alice",
+          "ip": "192.168.4.49"
+        },
+        {
+          "hostname": "cecilia",
+          "uptime_seconds": 113411,
+          "load_1m": 0.29,
+          "load_5m": 0.39,
+          "cpu_temp": 38050,
+          "mem_total_mb": 8062,
+          "mem_used_mb": 7306,
+          "disk_total_gb": 457,
+          "disk_used_gb": 76,
+          "disk_pct": 18,
+          "docker_containers": 0,
+          "docker_images": 0,
+          "systemd_failed": 5,
+          "ollama_models": 15,
+          "throttle_hex": "unknown",
+          "governor": "conservative",
+          "cpu_temp_c": 38.0,
+          "mem_pct": 90.6,
+          "status": "online",
+          "node": "cecilia",
+          "ip": "192.168.4.96"
+        },
+        {
+          "node": "octavia",
+          "ip": "192.168.4.100",
+          "status": "offline"
+        },
+        {
+          "hostname": "octavia",
+          "uptime_seconds": 113380,
+          "load_1m": 14.11,
+          "load_5m": 7.17,
+          "cpu_temp": 57300,
+          "mem_total_mb": 8059,
+          "mem_used_mb": 5464,
+          "disk_total_gb": 235,
+          "disk_used_gb": 72,
+          "disk_pct": 33,
+          "docker_containers": 14,
+          "docker_images": 15,
+          "systemd_failed": 4,
+          "ollama_models": 6,
+          "throttle_hex": "unknown",
+          "governor": "ondemand",
+          "cpu_temp_c": 57.3,
+          "mem_pct": 67.8,
+          "status": "online",
+          "node": "lucidia",
+          "ip": "192.168.4.38"
+        }
+      ]
+    },
+    "gitea": {
+      "source": "gitea",
+      "collected_at": "2026-03-13T03:46:55Z",
+      "date": "2026-03-12",
+      "status": "unreachable",
+      "repos": {
+        "total": 0
+      },
+      "commits": {
+        "today": 0
+      }
+    }
+  }
+}
