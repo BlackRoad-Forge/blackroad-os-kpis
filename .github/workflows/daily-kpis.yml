@@ -2,7 +2,7 @@ name: Daily KPI Collection
 
 on:
   schedule:
-    - cron: '0 6 * * *'  # 6 AM UTC = midnight CST
+    - cron: '0 6 * * *'
   workflow_dispatch:
 
 permissions:
@@ -19,13 +19,6 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install GitHub CLI
-        run: |
-          type -p curl >/dev/null || sudo apt-get install curl -y
-          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-          sudo apt-get update && sudo apt-get install gh -y
-
       - name: Collect GitHub KPIs
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -33,10 +26,11 @@ jobs:
 
       - name: Generate daily aggregate
         run: |
-          source lib/common.sh
+          TODAY=$(date +%Y-%m-%d)
+          NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
           python3 -c "
           import json, glob, os
-          today = '$(date +%Y-%m-%d)'
+          today = '$TODAY'
           data_dir = 'data'
           os.makedirs(f'{data_dir}/daily', exist_ok=True)
           snapshots = {}
@@ -47,7 +41,7 @@ jobs:
           gh = snapshots.get('github', {})
           daily = {
               'date': today,
-              'collected_at': '$(date -u +%Y-%m-%dT%H:%M:%SZ)',
+              'collected_at': '$NOW',
               'summary': {
                   'commits_today': gh.get('commits', {}).get('today', 0),
                   'prs_open': gh.get('pull_requests', {}).get('open', 0),
@@ -71,9 +65,9 @@ jobs:
         run: bash reports/markdown-report.sh
 
       - name: Post to Slack
-        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: env.SLACK_WEBHOOK_URL != ''
         run: bash reports/slack-notify.sh
 
       - name: Commit data
